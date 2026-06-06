@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>メール見守りtAI | メール確認と返信下書きをAIに任せる</title>
+  <meta name="description" content="メール見守りtAIは、未読メール確認、要返信メールの抽出、返信下書き作成、今日・明日の予定報告を毎日サポートするメール自動化AIです。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --yellow: #ffe07a;
+      --yellow-soft: #fff4c2;
+      --black: #111111;
+      --ink: #202020;
+      --paper: #f7f6f2;
+      --white: #ffffff;
+      --muted: #6c6c6c;
+      --line: #111111;
+      --pale: #eeeee8;
+      --accent: #ffe48f;
+      --shadow: 12px 12px 0 #111111;
+      --soft-shadow: 0 20px 50px rgba(17, 17, 17, 0.12);
+      --radius: 0;
+      --container: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--black);
+      background: var(--paper);
+      font-family: "Noto Sans JP", sans-serif;
+      line-height: 1.85;
+      overflow-x: hidden;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(calc(100% - 44px), var(--container));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 20;
+      background: rgba(247, 246, 242, 0.86);
+      border-bottom: 2px solid rgba(17, 17, 17, 0.08);
+      backdrop-filter: blur(14px);
+    }
+
+    .header-inner {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 1;
+    }
+
+    .logo-image {
+      width: auto;
+      height: 40px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .logo-word {
+      font-size: 1.28rem;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    .tai-lockup {
+      position: relative;
+      display: inline-grid;
+      grid-template-columns: auto auto;
+      align-items: end;
+      gap: 1px;
+      padding: 2px 2px 8px 0;
+      line-height: 0.86;
+      isolation: isolate;
+    }
+
+    .tai-lockup::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: -4px;
+      bottom: 0;
+      height: 10px;
+      background: var(--yellow);
+      z-index: -1;
+    }
+
+    .tai-t {
+      align-self: start;
+      margin-top: 6px;
+      font-size: 1.04rem;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .tai-ai {
+      font-size: 1.72rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .tagline {
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0;
+      font-weight: 700;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      color: var(--ink);
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+
+    .nav a {
+      border-bottom: 2px solid transparent;
+      transition: border-color 160ms ease, transform 160ms ease;
+    }
+
+    .nav a:hover {
+      border-color: var(--yellow);
+      transform: translateY(-1px);
+    }
+
+    .start-button {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 18px;
+      background: var(--black);
+      color: var(--white);
+      font-size: 0.86rem;
+      font-weight: 900;
+      border: 2px solid var(--black);
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .start-button:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 var(--yellow);
+      background: var(--yellow);
+      color: var(--black);
+    }
+
+    .menu-icon {
+      display: none;
+      width: 34px;
+      height: 26px;
+      flex: 0 0 auto;
+    }
+
+    .menu-icon span {
+      display: block;
+      height: 4px;
+      margin-bottom: 7px;
+      background: var(--black);
+    }
+
+    .hero {
+      position: relative;
+      min-height: 760px;
+      padding: 142px 0 82px;
+      background:
+        linear-gradient(116deg, var(--paper) 0%, var(--paper) 45%, var(--yellow) 45.2%, var(--yellow) 100%);
+      overflow: hidden;
+      border-bottom: 2px solid rgba(17, 17, 17, 0.06);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: 54px;
+      align-items: center;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 2;
+    }
+
+    .service-kana {
+      margin: 0 0 18px;
+      color: var(--black);
+      font-size: 0.95rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+    }
+
+    .hero h1 {
+      margin: 0 0 28px;
+      font-size: clamp(1.9rem, 3.8vw, 3.6rem);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .hero-line {
+      display: inline;
+      background: var(--white);
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      padding: 0.08em 0.18em;
+      line-height: 1.55;
+    }
+
+    .hero-line .yellow-mark {
+      position: relative;
+    }
+
+    .hero-line .yellow-mark::after {
+      content: "";
+      position: absolute;
+      left: -0.04em;
+      right: -0.04em;
+      bottom: 0.06em;
+      height: 0.22em;
+      background: var(--yellow);
+      z-index: 0;
+    }
+
+    .lead {
+      max-width: 480px;
+      margin: 0 0 28px;
+      color: var(--ink);
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .lead strong {
+      background: linear-gradient(transparent 58%, var(--yellow-soft) 58%);
+    }
+
+    .hero-actions,
+    .cta-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 54px;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 0 24px;
+      border: 3px solid var(--black);
+      font-weight: 900;
+      line-height: 1.2;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .button-primary {
+      background: var(--black);
+      color: var(--white);
+      box-shadow: 7px 7px 0 var(--yellow);
+    }
+
+    .button-primary:hover {
+      transform: translate(-3px, -3px);
+      box-shadow: 11px 11px 0 var(--yellow);
+    }
+
+    .button-secondary {
+      background: var(--white);
+      color: var(--black);
+    }
+
+    .button-secondary:hover {
+      transform: translate(-3px, -3px);
+      box-shadow: 7px 7px 0 var(--black);
+    }
+
+    .hero-visual {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-frame {
+      position: relative;
+      border: 4px solid var(--black);
+      background: var(--white);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transform: rotate(0.5deg);
+    }
+
+    .hero-frame img {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+    }
+
+    .floating-note {
+      position: absolute;
+      right: -22px;
+      bottom: 22px;
+      width: min(300px, 56%);
+      border: 3px solid var(--black);
+      background: var(--white);
+      padding: 18px;
+      box-shadow: 8px 8px 0 var(--black);
+      transform: rotate(-1deg);
+    }
+
+    .floating-note p {
+      margin: 0 0 10px;
+      font-weight: 900;
+      line-height: 1.45;
+    }
+
+    .mini-list {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      color: var(--ink);
+      font-size: 0.86rem;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .mini-list li {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .mini-list li::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      display: block;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: var(--yellow);
+      border: 2px solid var(--black);
+    }
+
+    section {
+      padding: 112px 0;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 54px;
+    }
+
+    .en-title {
+      display: block;
+      color: rgba(255, 210, 0, 0.75);
+      font-family: "Oswald", sans-serif;
+      font-size: clamp(4.2rem, 10vw, 8.6rem);
+      font-weight: 300;
+      line-height: 0.92;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .section-title h2 {
+      margin: 8px 0 0;
+      font-size: clamp(1.3rem, 2.5vw, 2rem);
+      font-weight: 900;
+      letter-spacing: 0.04em;
+    }
+
+    .title-line-small {
+      width: 52px;
+      height: 5px;
+      margin: 18px auto 0;
+      background: var(--yellow);
+    }
+
+    .concept {
+      background: var(--white);
+    }
+
+    .concept-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      align-items: center;
+      gap: 72px;
+    }
+
+    .line-illo {
+      min-height: 360px;
+      display: grid;
+      place-items: center;
+    }
+
+    .illustration-card {
+      position: relative;
+      width: min(410px, 100%);
+      aspect-ratio: 1.08;
+      border: 4px solid var(--black);
+      background: var(--paper);
+      box-shadow: 12px 12px 0 var(--yellow);
+      transform: rotate(-2deg);
+    }
+
+    .illustration-card::before {
+      content: "";
+      position: absolute;
+      left: 36px;
+      top: 44px;
+      width: 70%;
+      height: 52%;
+      border: 4px solid var(--black);
+      background:
+        linear-gradient(var(--yellow) 0 20%, transparent 20%),
+        repeating-linear-gradient(180deg, transparent 0 28px, rgba(17, 17, 17, 0.16) 28px 31px, transparent 31px 42px);
+    }
+
+    .illustration-card::after {
+      content: "";
+      position: absolute;
+      left: 108px;
+      bottom: 44px;
+      width: 180px;
+      height: 118px;
+      border: 4px solid var(--black);
+      border-radius: 90px 90px 12px 12px;
+      background: var(--white);
+      box-shadow: inset 0 38px 0 var(--yellow);
+    }
+
+    .concept-copy h3,
+    .about-copy h3 {
+      margin: 0 0 24px;
+      font-size: clamp(2.1rem, 4.6vw, 4rem);
+      line-height: 1.36;
+      letter-spacing: 0;
+      font-weight: 900;
+    }
+
+    .concept-copy p,
+    .about-copy p {
+      max-width: 620px;
+      margin: 0 0 18px;
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    .problem {
+      background: var(--pale);
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .problem-card {
+      min-height: 260px;
+      padding: 26px;
+      border: 3px solid var(--black);
+      background: var(--white);
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .problem-card:hover {
+      transform: translate(-4px, -4px);
+      box-shadow: 8px 8px 0 var(--yellow);
+    }
+
+    .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      margin-bottom: 22px;
+      background: var(--black);
+      color: var(--yellow);
+      font-family: "Oswald", sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .problem-card h3,
+    .feature-card h3,
+    .flow-card h3,
+    .safety-card h3,
+    .target-card h3 {
+      margin: 0 0 12px;
+      font-size: 1.22rem;
+      line-height: 1.48;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .problem-card p,
+    .feature-card p,
+    .flow-card p,
+    .safety-card p,
+    .target-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.96rem;
+      font-weight: 500;
+    }
+
+    .about {
+      background: var(--white);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 0.9fr;
+      gap: 70px;
+      align-items: center;
+    }
+
+    .phone-illo {
+      position: relative;
+      min-height: 520px;
+      display: grid;
+      place-items: center;
+    }
+
+    .phone {
+      position: relative;
+      width: min(300px, 78vw);
+      height: 520px;
+      border: 5px solid var(--black);
+      border-radius: 42px;
+      background: var(--white);
+      box-shadow: 16px 16px 0 var(--yellow);
+      overflow: hidden;
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 14px;
+      width: 92px;
+      height: 18px;
+      transform: translateX(-50%);
+      border-radius: 0 0 16px 16px;
+      background: var(--black);
+      z-index: 2;
+    }
+
+    .phone-screen {
+      position: absolute;
+      inset: 38px 18px 22px;
+      border: 3px solid var(--black);
+      background: var(--paper);
+      padding: 22px 18px;
+    }
+
+    .phone-title {
+      margin: 0 0 18px;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+
+    .mail-row {
+      height: 56px;
+      margin-bottom: 12px;
+      border: 3px solid var(--black);
+      background: var(--white);
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 0 12px;
+    }
+
+    .mail-row i {
+      width: 28px;
+      height: 22px;
+      border: 3px solid var(--black);
+      position: relative;
+      display: block;
+      background: var(--yellow);
+    }
+
+    .mail-row i::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(145deg, transparent 45%, var(--black) 47% 53%, transparent 55%);
+      opacity: 0.45;
+    }
+
+    .bar {
+      display: block;
+      height: 8px;
+      margin: 6px 0;
+      background: var(--black);
+    }
+
+    .bar.short {
+      width: 62%;
+      opacity: 0.35;
+    }
+
+    .bar.long {
+      width: 90%;
+      opacity: 0.18;
+    }
+
+    .features {
+      background: var(--yellow);
+      border-top: 4px solid var(--black);
+      border-bottom: 4px solid var(--black);
+    }
+
+    .features .en-title {
+      color: rgba(255, 255, 255, 0.58);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .feature-card {
+      padding: 28px;
+      background: var(--white);
+      border: 3px solid var(--black);
+      box-shadow: 8px 8px 0 var(--black);
+    }
+
+    .feature-icon {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+      border: 3px solid var(--black);
+      background: var(--yellow);
+    }
+
+    .feature-icon svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .flow {
+      background: var(--paper);
+    }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    .flow-card {
+      border: 4px solid var(--black);
+      background: var(--white);
+      box-shadow: 14px 14px 0 var(--yellow);
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .flow-card header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      min-height: 132px;
+      padding: 28px 34px;
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .flow-card header h3 {
+      margin: 0;
+      color: var(--white);
+      font-size: 2rem;
+      line-height: 1.35;
+    }
+
+    .flow-head-title {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .flow-head-icon {
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      color: var(--yellow);
+    }
+
+    .flow-head-icon svg {
+      width: 58px;
+      height: 58px;
+      stroke-width: 2.5;
+    }
+
+    .flow-time {
+      color: var(--yellow);
+      font-family: "Oswald", sans-serif;
+      font-size: 2.05rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .flow-list {
+      margin: 0;
+      padding: 30px 34px 34px;
+      list-style: none;
+      display: grid;
+      gap: 0;
+      position: relative;
+    }
+
+    .flow-list li.flow-item {
+      display: grid;
+      grid-template-columns: 56px 82px 1fr;
+      gap: 18px;
+      align-items: center;
+      color: var(--ink);
+      min-height: 118px;
+      padding: 20px 0;
+      border-bottom: 2px dashed rgba(17, 17, 17, 0.22);
+    }
+
+    .flow-num {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border: 3px solid var(--black);
+      background: var(--yellow);
+      color: var(--black);
+      font-family: "Oswald", sans-serif;
+      font-size: 1.42rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .flow-icon {
+      width: 72px;
+      height: 72px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #fff5c9;
+      color: var(--black);
+    }
+
+    .flow-icon svg {
+      width: 38px;
+      height: 38px;
+      stroke-width: 2.2;
+    }
+
+    .flow-text strong {
+      display: block;
+      color: var(--black);
+      font-size: 1.25rem;
+      font-weight: 900;
+      line-height: 1.42;
+      letter-spacing: 0;
+    }
+
+    .flow-text span {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink);
+      font-size: 0.96rem;
+      font-weight: 700;
+      line-height: 1.75;
+    }
+
+    .flow-list li.highlight-step {
+      display: grid;
+      grid-template-columns: 82px 76px 1fr;
+      gap: 18px;
+      align-items: center;
+      margin-top: 26px;
+      padding: 0 28px 0 0;
+      min-height: 156px;
+      border: 4px solid var(--yellow);
+      border-radius: 18px;
+      background: #fff9dc;
+      overflow: hidden;
+    }
+
+    .flow-list li.highlight-step .flow-num {
+      align-self: stretch;
+      width: 82px;
+      height: auto;
+      border: 0;
+      background: var(--black);
+      color: var(--yellow);
+      font-size: 2.1rem;
+      clip-path: polygon(0 0, 100% 0, 100% 86%, 50% 100%, 0 86%);
+    }
+
+    .flow-list li.highlight-step .flow-icon {
+      width: 68px;
+      height: 68px;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .flow-list li.highlight-step .flow-icon svg {
+      width: 46px;
+      height: 46px;
+    }
+
+    .flow-list li.highlight-step .hl-body {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+      color: var(--black);
+      font-size: 1rem;
+      line-height: 1.45;
+    }
+
+    .flow-list li.highlight-step .hl-title {
+      display: block;
+      font-size: 1.42rem;
+      font-weight: 900;
+      line-height: 1.4;
+    }
+
+    .flow-list li.highlight-step .you-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      justify-self: start;
+      max-width: 100%;
+      padding: 8px 16px;
+      border: 2px dashed #d9a900;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--black);
+      font-size: 0.98rem;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .flow-list li.highlight-step .you-label::before {
+      content: "";
+      width: 24px;
+      height: 24px;
+      display: inline-block;
+      flex: 0 0 auto;
+      border: 3px solid var(--black);
+      border-radius: 50%;
+      background:
+        linear-gradient(135deg, transparent 43%, var(--black) 44% 56%, transparent 57%) 5px 5px / 12px 12px no-repeat;
+    }
+
+    .safety {
+      background: var(--white);
+    }
+
+    .safety-grid,
+    .target-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .safety-card,
+    .target-card {
+      padding: 26px;
+      border: 3px solid var(--black);
+      background: var(--paper);
+    }
+
+    .safety-card {
+      min-height: 230px;
+    }
+
+    .safety-card strong,
+    .target-card strong {
+      display: inline-block;
+      margin-bottom: 16px;
+      background: var(--yellow);
+      padding: 0 8px;
+      font-family: "Oswald", sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 0.04em;
+    }
+
+    .target {
+      background: var(--pale);
+    }
+
+    .target-card {
+      background: var(--white);
+    }
+
+    .price {
+      background: var(--yellow);
+      border-top: 3px solid var(--black);
+      border-bottom: 3px solid var(--black);
+    }
+
+    .price-grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 34px;
+      align-items: stretch;
+    }
+
+    .price-ticket {
+      position: relative;
+      min-height: 100%;
+      padding: 34px;
+      border: 4px solid var(--black);
+      background: var(--white);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .price-ticket::after {
+      content: "";
+      position: absolute;
+      right: -42px;
+      top: -42px;
+      width: 126px;
+      height: 126px;
+      border: 4px solid var(--black);
+      border-radius: 999px;
+      background: var(--yellow);
+    }
+
+    .price-kicker {
+      display: inline-flex;
+      margin-bottom: 22px;
+      padding: 4px 10px;
+      background: var(--black);
+      color: var(--yellow);
+      font-family: "Oswald", sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .price-ticket h2 {
+      position: relative;
+      z-index: 1;
+      margin: 0 0 24px;
+      font-size: clamp(2.1rem, 4.4vw, 4.1rem);
+      line-height: 1.22;
+      letter-spacing: 0;
+      font-weight: 900;
+    }
+
+    .price-main {
+      position: relative;
+      z-index: 1;
+      display: inline-grid;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .price-main small {
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+    }
+
+    .price-amount {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      font-family: "Oswald", "Noto Sans JP", sans-serif;
+      color: var(--black);
+      line-height: 0.95;
+    }
+
+    .price-amount strong {
+      font-size: clamp(4.2rem, 10vw, 8.5rem);
+      letter-spacing: 0;
+    }
+
+    .price-amount span {
+      padding-bottom: 0.7rem;
+      font-size: clamp(2.1rem, 4.5vw, 4rem);
+      font-weight: 900;
+    }
+
+    .price-note {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: var(--ink);
+      font-weight: 900;
+      line-height: 1.75;
+    }
+
+    .price-includes {
+      display: grid;
+      gap: 14px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .price-includes li {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 18px;
+      border: 3px solid var(--black);
+      background: var(--white);
+      font-weight: 900;
+      box-shadow: 7px 7px 0 rgba(17, 17, 17, 0.16);
+    }
+
+    .price-includes b {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      background: var(--black);
+      color: var(--yellow);
+      font-family: "Oswald", sans-serif;
+      font-size: 1.15rem;
+    }
+
+    .price-side-note {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border: 3px solid var(--black);
+      background: var(--black);
+      color: var(--white);
+      font-weight: 800;
+      line-height: 1.75;
+    }
+
+    .cta {
+      position: relative;
+      padding: 96px 0;
+      background: var(--white);
+      color: var(--black);
+      overflow: hidden;
+    }
+
+    .cta::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 38%;
+      background: var(--yellow);
+      clip-path: polygon(0 0, 72% 0, 100% 100%, 0 100%);
+      opacity: 1;
+    }
+
+    .cta-inner {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 34px;
+      z-index: 1;
+    }
+
+    .cta h2 {
+      margin: 0 0 16px;
+      font-size: clamp(2.3rem, 5vw, 4.6rem);
+      line-height: 1.22;
+      letter-spacing: 0;
+      font-weight: 900;
+    }
+
+    .cta p {
+      max-width: 700px;
+      margin: 0;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .cta .button-primary {
+      border-color: var(--black);
+      box-shadow: 8px 8px 0 var(--yellow);
+    }
+
+    .cta .button-secondary {
+      background: var(--white);
+      color: var(--black);
+      border-color: var(--black);
+    }
+
+    .footer {
+      padding: 30px 0;
+      background: var(--white);
+      border-top: 3px solid var(--black);
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    @media (max-width: 960px) {
+      .nav {
+        display: none;
+      }
+
+      .menu-icon {
+        display: block;
+      }
+
+      .hero {
+        min-height: auto;
+        background:
+          linear-gradient(120deg, var(--paper) 0%, var(--paper) 56%, var(--yellow) 56.2%, var(--yellow) 100%);
+      }
+
+        .hero-grid,
+        .concept-grid,
+        .about-grid,
+        .price-grid,
+        .cta-inner {
+          grid-template-columns: 1fr;
+        }
+
+      .hero-frame {
+        transform: none;
+      }
+
+      .problem-grid,
+      .feature-grid,
+      .safety-grid,
+      .target-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 680px) {
+      .container {
+        width: min(calc(100% - 28px), var(--container));
+      }
+
+      .header-inner {
+        min-height: 64px;
+      }
+
+      .logo {
+        gap: 9px;
+      }
+
+      .logo-image {
+        height: 30px;
+      }
+
+      .logo-word {
+        font-size: 1rem;
+        letter-spacing: 0.03em;
+      }
+
+      .tai-lockup {
+        padding-bottom: 7px;
+      }
+
+      .tai-lockup::after {
+        left: 9px;
+        right: -3px;
+        height: 8px;
+      }
+
+      .tai-t {
+        margin-top: 5px;
+        font-size: 0.78rem;
+      }
+
+      .tai-ai {
+        font-size: 1.36rem;
+      }
+
+      .tagline,
+      .site-header .start-button {
+        display: none;
+      }
+
+      .hero {
+        padding: 104px 0 58px;
+        background:
+          linear-gradient(116deg, var(--paper) 0%, var(--paper) 64%, var(--yellow) 64.2%, var(--yellow) 100%);
+      }
+
+      .hero h1 {
+        font-size: 1.9rem;
+      }
+
+      .lead {
+        font-size: 0.98rem;
+      }
+
+      .hero-actions,
+      .cta-actions {
+        align-items: stretch;
+      }
+
+      .button {
+        width: 100%;
+        min-height: 52px;
+      }
+
+      .floating-note {
+        position: static;
+        width: auto;
+        margin: 20px 8px 0;
+        transform: none;
+      }
+
+      section {
+        padding: 78px 0;
+      }
+
+      .en-title {
+        font-size: 4rem;
+      }
+
+      .problem-grid,
+      .feature-grid,
+      .flow-grid,
+      .safety-grid,
+      .target-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-card {
+        box-shadow: 8px 8px 0 var(--yellow);
+      }
+
+      .flow-card header {
+        min-height: auto;
+        padding: 24px 22px;
+        gap: 12px;
+      }
+
+      .flow-head-title {
+        gap: 12px;
+      }
+
+      .flow-head-icon,
+      .flow-head-icon svg {
+        width: 42px;
+        height: 42px;
+      }
+
+      .flow-card header h3 {
+        font-size: 1.45rem;
+      }
+
+      .flow-time {
+        font-size: 1.25rem;
+      }
+
+      .flow-list {
+        padding: 22px 20px 26px;
+      }
+
+      .flow-list li.flow-item {
+        grid-template-columns: 38px 54px 1fr;
+        gap: 10px;
+        min-height: 96px;
+        padding: 16px 0;
+      }
+
+      .flow-num {
+        width: 34px;
+        height: 34px;
+        font-size: 1.08rem;
+      }
+
+      .flow-icon {
+        width: 48px;
+        height: 48px;
+      }
+
+      .flow-icon svg {
+        width: 27px;
+        height: 27px;
+      }
+
+      .flow-text strong {
+        font-size: 1rem;
+        line-height: 1.45;
+      }
+
+      .flow-text span {
+        font-size: 0.84rem;
+        line-height: 1.65;
+      }
+
+      .flow-list li.highlight-step {
+        grid-template-columns: 54px 1fr;
+        gap: 14px;
+        min-height: auto;
+        padding: 0 18px 0 0;
+        border-radius: 14px;
+      }
+
+      .flow-list li.highlight-step .flow-num {
+        width: 54px;
+        min-height: 138px;
+        font-size: 1.4rem;
+      }
+
+      .flow-list li.highlight-step .flow-icon {
+        display: none;
+      }
+
+      .flow-list li.highlight-step .hl-title {
+        font-size: 1.06rem;
+        line-height: 1.45;
+      }
+
+      .flow-list li.highlight-step .you-label {
+        padding: 6px 10px;
+        font-size: 0.76rem;
+      }
+
+      .flow-list li.highlight-step .you-label::before {
+        width: 19px;
+        height: 19px;
+        border-width: 2px;
+      }
+
+      .price-ticket {
+        padding: 26px 22px;
+        box-shadow: 8px 8px 0 var(--black);
+      }
+
+      .price-amount {
+        align-items: baseline;
+      }
+
+      .price-amount strong {
+        font-size: 4.6rem;
+      }
+
+      .price-amount span {
+        padding-bottom: 0;
+        font-size: 2.2rem;
+      }
+
+      .price-includes li {
+        grid-template-columns: 38px 1fr;
+        padding: 15px;
+      }
+
+      .price-includes b {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+      }
+
+      .concept-grid,
+      .about-grid {
+        gap: 42px;
+      }
+
+      .concept-copy h3,
+      .about-copy h3 {
+        font-size: 2.25rem;
+      }
+
+      .line-illo {
+        min-height: 290px;
+      }
+
+      .phone-illo {
+        min-height: 450px;
+      }
+
+      .phone {
+        height: 450px;
+      }
+
+      .cta::before {
+        width: 100%;
+        height: 120px;
+        clip-path: polygon(0 0, 100% 0, 84% 100%, 0 100%);
+      }
+
+      .footer-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="#top" aria-label="メール見守りtAI トップへ">
+        <img class="logo-image" src="assets/logo-image2-cropped.png" alt="メール見守り tAI">
+        <span class="tagline">メールを見守る、AIの隊。</span>
+      </a>
+      <nav class="nav" aria-label="ページ内ナビゲーション">
+        <a href="#concept">CONCEPT</a>
+        <a href="#about">ABOUT</a>
+        <a href="#flow">FLOW</a>
+        <a href="#safety">SAFETY</a>
+        <a href="#price">PRICE</a>
+      </nav>
+      <a class="start-button" href="#contact">相談してみる</a>
+      <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="service-kana">メール見守り隊、はじめます。</p>
+          <h1>
+            <span class="hero-line">メール確認と</span><br>
+            <span class="hero-line">返信下書きを、</span><br>
+            <span class="hero-line">毎日<span class="yellow-mark">AI</span>に。</span>
+          </h1>
+          <p class="lead">
+            未読メールを確認し、返信が必要なものだけ下書きに。
+            <strong>送信はあなたが確認してから</strong>だから、安心してメール対応を自動化できます。
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#contact">導入について相談する</a>
+            <a class="button button-secondary" href="#about">できることを見る</a>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-frame">
+            <img src="assets/hero.png" alt="メール確認、返信下書き、予定報告を行うAIの画面イメージ">
+          </div>
+          <aside class="floating-note" aria-label="メール見守りtAIの主な価値">
+            <p>メール見守りtAI が毎日チェック</p>
+            <ul class="mini-list">
+              <li>未読メールを確認</li>
+              <li>返信が必要なメールを発見</li>
+              <li>下書きだけ作成</li>
+              <li>今日・明日の予定も報告</li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="concept" id="concept">
+      <div class="container">
+        <div class="section-title">
+          <span class="en-title">CONCEPT</span>
+          <h2>メール対応を、少しだけ先回り。</h2>
+          <div class="title-line-small"></div>
+        </div>
+        <div class="concept-grid">
+          <div class="line-illo" aria-hidden="true">
+            <div class="illustration-card"></div>
+          </div>
+          <div class="concept-copy">
+            <h3>本当は、<br>返すべきメールだけ<br>見たい。</h3>
+            <p>
+              メールボックスには、問い合わせ、日程調整、確認依頼、通知、広告が全部まとめて届きます。
+              忙しい日は、返信すべきメールほど後回しになりがちです。
+            </p>
+            <p>
+              メール見守りtAIは、毎日メールを見守り、返信が必要そうなものを見つけて、
+              丁寧な返信文を下書きに入れます。あなたは内容を確認して、必要なら直して、送るだけ。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="problem" id="problem">
+      <div class="container">
+        <div class="section-title">
+          <span class="en-title">WORRIES</span>
+          <h2>こんなメールの悩み、ありませんか？</h2>
+          <div class="title-line-small"></div>
+        </div>
+        <div class="problem-grid">
+          <article class="problem-card">
+            <span class="num">01</span>
+            <h3>返信漏れが怖い</h3>
+            <p>大事な問い合わせや確認依頼が、通知や広告メールに埋もれてしまう。</p>
+          </article>
+          <article class="problem-card">
+            <span class="num">02</span>
+            <h3>確認に時間がかかる</h3>
+            <p>未読を全部開いて、返すべきかどうか判断するだけで朝の時間が削られる。</p>
+          </article>
+          <article class="problem-card">
+            <span class="num">03</span>
+            <h3>日程調整が面倒</h3>
+            <p>メールを見ながらカレンダーも確認するため、予定確認が行ったり来たりになる。</p>
+          </article>
+          <article class="problem-card">
+            <span class="num">04</span>
+            <h3>下書きが後回し</h3>
+            <p>返す内容は分かっていても、丁寧な文章に整えるところで止まってしまう。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="about" id="about">
+      <div class="container">
+        <div class="section-title">
+          <span class="en-title">ABOUT</span>
+          <h2>メール見守りtAIがやること</h2>
+          <div class="title-line-small"></div>
+        </div>
+        <div class="about-grid">
+          <div class="about-copy">
+            <h3>メールを見て、<br>必要な返事の準備まで。</h3>
+            <p>
+              Gmailの未読メールを確認し、質問・依頼・日程調整・確認事項など、
+              返信が必要そうなメールを見つけます。
+            </p>
+            <p>
+              返信が必要なものには、丁寧なビジネス文面の下書きを作成。
+              さらにGoogleカレンダーから今日・明日の予定もまとめて、チャットで報告します。
+            </p>
+          </div>
+          <div class="phone-illo" aria-hidden="true">
+            <div class="phone">
+              <div class="phone-screen">
+                <p class="phone-title">今日の見守りレポート</p>
+                <div class="mail-row"><i></i><span><b class="bar"></b><b class="bar short"></b></span></div>
+                <div class="mail-row"><i></i><span><b class="bar"></b><b class="bar long"></b></span></div>
+                <div class="mail-row"><i></i><span><b class="bar"></b><b class="bar short"></b></span></div>
+                <div class="mail-row"><i></i><span><b class="bar"></b><b class="bar long"></b></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="container">
+        <div class="section-title">
+          <span class="en-title">SUPPORT</span>
+          <h2>毎日のメール対応を、ここまでサポート。</h2>
+          <div class="title-line-small"></div>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4V6Z" stroke="currentColor" stroke-width="2.5"/><path d="m5 7 7 6 7-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </span>
+            <h3>未読メールを毎日チェック</h3>
+            <p>朝と夕方にメールを確認し、見るべきメールを整理します。</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M6 4h9l3 3v13H6V4Z" stroke="currentColor" stroke-width="2.5"/><path d="M9 13h6M9 17h4M15 4v4h3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </span>
+            <h3>返信が必要なものだけ下書き</h3>
+            <p>質問や依頼があるメールに、丁寧な返信文を用意します。</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14v15H5V5Z" stroke="currentColor" stroke-width="2.5"/><path d="M8 3v4M16 3v4M5 10h14M8 14h3M8 17h5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </span>
+            <h3>今日・明日の予定も報告</h3>
+            <p>カレンダー予定とメール対応をまとめて確認できます。</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M5 8h14v12H5V8Z" stroke="currentColor" stroke-width="2.5"/><path d="M8 8V6a4 4 0 0 1 8 0v2" stroke="currentColor" stroke-width="2.5"/><path d="m9 14 2 2 4-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>下書きの重複を防止</h3>
+            <p>作成済みラベルと同じスレッドの確認で、二重下書きを防ぎます。</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16v10H7l-3 3V6Z" stroke="currentColor" stroke-width="2.5"/><path d="M8 10h8M8 13h5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </span>
+            <h3>チャットでまとめて報告</h3>
+            <p>未読件数、要返信件数、予定を読みやすくまとめます。</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6l-7-3Z" stroke="currentColor" stroke-width="2.5"/><path d="m8.5 12 2.2 2.2 4.8-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>自動送信はしない</h3>
+            <p>AIが作るのは下書きまで。送る前に必ず人が確認できます。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="flow" id="flow">
+      <div class="container">
+        <div class="section-title">
+          <span class="en-title">FLOW</span>
+          <h2>1日の流れ</h2>
+          <div class="title-line-small"></div>
+        </div>
+        <div class="flow-grid">
+          <article class="flow-card">
+            <header>
+              <div class="flow-head-title">
+                <span class="flow-head-icon" aria-hidden="true">
+                  <svg viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="32" r="14" fill="currentColor"/>
+                    <path d="M32 5v10M32 49v10M5 32h10M49 32h10M13 13l7 7M44 44l7 7M51 13l-7 7M20 44l-7 7" stroke="currentColor" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <h3>朝の見守り</h3>
+              </div>
+              <span class="flow-time">MORNING</span>
+            </header>
+            <ol class="flow-list">
+              <li class="flow-item">
+                <span class="flow-num">1</span>
+                <span class="flow-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4V6Z" stroke="currentColor" stroke-linejoin="round"/><path d="m5 7 7 6 7-6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="flow-text"><strong>未読メールを確認</strong><span>受信ボックスをチェックして、未読メールを確認します。</span></span>
+              </li>
+              <li class="flow-item">
+                <span class="flow-num">2</span>
+                <span class="flow-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M21 3 10 14" stroke="currentColor" stroke-linecap="round"/><path d="m21 3-7 18-4-7-7-4 18-7Z" stroke="currentColor" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="flow-text"><strong>返信が必要なメールを抽出</strong><span>返信が必要なメールを見つけて、リストアップします。</span></span>
+              </li>
+              <li class="flow-item">
+                <span class="flow-num">3</span>
+                <span class="flow-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M6 3h9l3 3v15H6V3Z" stroke="currentColor" stroke-linejoin="round"/><path d="M15 3v4h4M9 12h5M9 16h3M15 18l4-4 2 2-4 4h-2v-2Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="flow-text"><strong>返信下書きを作成</strong><span>メールの下書きを作成し、内容を整理します。</span></span>
+              </li>
+              <li class="highlight-step">
+                <span class="flow-num">4</span>
+                <span class="flow-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M7 4h10v17H7V4Z" stroke="currentColor" stroke-linejoin="round"/><path d="M9 7h6M9 11l1.5 1.5L14 9M9 16l1.5 1.5L14 14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <div class="hl-body"><span class="hl-title">今日の予定をまとめて報告</span><span class="you-label">あなたはここだけ見ればOK</span></div>
+              </li>
+            </ol>
+          </article>
+          <article class="flow-card">
+            <header>
+              <div class="flow-head-title">
+                <span class="flow-head-icon" aria-hidden="true">
+                  <svg viewBox="0 0 64 64" fill="none">
+                    <path d="M43 51C28 51 16 39 16 24c0-6 2-11 5-15C12 13 6 22 6 33c0 14 11 25 25 25 11 0 20-6 24-15-4 5-8 8-12 8Z" fill="currentColor"/>
+                    <path d="M48 8l2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6ZM35 17l1.4 4 4 1.4-4 1.4-1.4 4-1.4-4-4-1.4 4-1.4 1.4-4Z" fill="currentColor"/>
+                  </svg>
+                </span>
+                <h3>夕方の見守り</h3>
+              </div>
+              <span class="flow-time">EVENING</span>
+            </header>
+            <ol class="flow-list">
+              <li class="flow-item">
+                <span class="flow-num">1</span>
+                <span class="flow-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4V6Z" stroke="currentColor" stroke-linejoin="round"/><path d="m5 7 7 6 7-6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="flow-text"><strong>午後の新着メールを確認</strong><span>午後に届いた新着メールをチェックします。</span></span>
+              </li>
+              <li class="flow-item">
+                <span class="flow-num">2</span>
+                <span class="flow-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M18 9a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" stroke="currentColor" stroke-linejoin="round"/><path d="M10 21h4" stroke="currentColor" stroke-linecap="round"/></svg>
+                </span>
+                <span class="flow-text"><strong>緊急・期限ありのメールを目立たせる</strong><span>対応が必要なメールを抽出し、優先度を明確にします。</span></span>
+              </li>
+              <li class="flow-item">
+                <span class="flow-num">3</span>
+                <span class="flow-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M6 3h9l3 3v15H6V3Z" stroke="currentColor" stroke-linejoin="round"/><path d="M15 3v4h4M9 12h5M9 16h3" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="17" r="3" stroke="currentColor"/><path d="M18 15.8v2.4M16.8 17h2.4" stroke="currentColor" stroke-linecap="round"/></svg>
+                </span>
+                <span class="flow-text"><strong>必要な下書きを追加</strong><span>追加で必要なメールの下書きを作成します。</span></span>
+              </li>
+              <li class="highlight-step">
+                <span class="flow-num">4</span>
+                <span class="flow-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M7 4h10v17H7V4Z" stroke="currentColor" stroke-linejoin="round"/><path d="M9 7h6M9 11l1.5 1.5L14 9M9 16l1.5 1.5L14 14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <div class="hl-body"><span class="hl-title">明日の予定をまとめて報告</span><span class="you-label">あなたはここだけ見ればOK</span></div>
+              </li>
+            </ol>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="safety" id="safety">
+      <div class="container">
+        <div class="section-title">
+          <span class="en-title">SAFETY</span>
+          <h2>安心して使うための設計</h2>
+          <div class="title-line-small"></div>
+        </div>
+        <div class="safety-grid">
+          <article class="safety-card">
+            <strong>NO SEND</strong>
+            <h3>自動送信なし</h3>
+            <p>送信はあなたが確認してから。AIが勝手に顧客へ返信することはありません。</p>
+          </article>
+          <article class="safety-card">
+            <strong>DRAFT</strong>
+            <h3>下書きだけ作成</h3>
+            <p>Gmailの下書きに保存するので、文章の調整や削除ができます。</p>
+          </article>
+          <article class="safety-card">
+            <strong>GUARD</strong>
+            <h3>重複下書き防止</h3>
+            <p>下書き済みラベルと同一スレッド確認で、同じメールへの二重作成を防ぎます。</p>
+          </article>
+          <article class="safety-card">
+            <strong>SCOPE</strong>
+            <h3>対象アカウントを明確化</h3>
+            <p>どのメールを見るか、どこへ報告するかを決めてから運用します。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="target">
+      <div class="container">
+        <div class="section-title">
+          <span class="en-title">FOR YOU</span>
+          <h2>こんな人に向いています</h2>
+          <div class="title-line-small"></div>
+        </div>
+        <div class="target-grid">
+          <article class="target-card">
+            <strong>OWNER</strong>
+            <h3>経営者</h3>
+            <p>商談、採用、問い合わせのメールを毎日取りこぼしたくない人へ。</p>
+          </article>
+          <article class="target-card">
+            <strong>SOLO</strong>
+            <h3>個人事業主</h3>
+            <p>ひとりで営業、制作、顧客対応を回していて、返信が後回しになりがちな人へ。</p>
+          </article>
+          <article class="target-card">
+            <strong>TEAM</strong>
+            <h3>少人数チーム</h3>
+            <p>専任の事務担当を置く前に、メール確認の負担を減らしたいチームへ。</p>
+          </article>
+          <article class="target-card">
+            <strong>SALES</strong>
+            <h3>営業担当</h3>
+            <p>日程調整、見積確認、返信文の作成をもっと速くしたい人へ。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="price" id="price">
+      <div class="container price-grid">
+        <div class="price-ticket">
+          <span class="price-kicker">BUY OUT</span>
+          <h2>メール見守り隊は、<br>買い切りで導入できます。</h2>
+          <div class="price-main" aria-label="買い切り価格25万円">
+            <small>一律導入費</small>
+            <div class="price-amount"><strong>25</strong><span>万円</span></div>
+          </div>
+          <p class="price-note">
+            Gmail 1アカウントから、朝夕のメール確認・返信下書き・予定報告を始めるための導入プランです。
+          </p>
+        </div>
+        <div>
+          <ul class="price-includes">
+            <li><b>01</b><span>Gmailの未読・新着メールを朝夕チェック</span></li>
+            <li><b>02</b><span>返信が必要そうなメールを抽出</span></li>
+            <li><b>03</b><span>丁寧な返信下書きをGmailに作成</span></li>
+            <li><b>04</b><span>Googleカレンダーから今日・明日の予定を報告</span></li>
+          </ul>
+          <p class="price-side-note">
+            自動送信はしません。AIが作るのは下書きまで。追加改修、複数アカウント対応、継続保守は必要に応じて別途相談です。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta" id="contact">
+      <div class="container cta-inner">
+        <div>
+          <h2>メール対応を、<br>見守りtAIに任せてみる。</h2>
+          <p>
+            まずは、今のメール対応でどこを自動化できるかを一緒に整理します。
+            返信漏れを減らし、下書き作成の手間を軽くするところから始めましょう。
+          </p>
+        </div>
+        <div class="cta-actions">
+          <a class="button button-primary" href="#contact">メール対応を自動化したい</a>
+          <a class="button button-secondary" href="#top">上へ戻る</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span>メール見守りtAI</span>
+      <span>メール確認と返信下書きを、毎日AIに。</span>
+    </div>
+  </footer>
+</body>
+</html>
