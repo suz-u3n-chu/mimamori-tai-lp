@@ -402,6 +402,7 @@
       font-size: clamp(1.3rem, 2.5vw, 2rem);
       font-weight: 900;
       letter-spacing: 0.04em;
+      text-wrap: balance;
     }
 
     .title-line-small {
@@ -471,6 +472,7 @@
       line-height: 1.36;
       letter-spacing: 0;
       font-weight: 900;
+      text-wrap: balance;
     }
 
     .concept-copy p,
@@ -989,10 +991,11 @@
       position: relative;
       z-index: 1;
       margin: 0 0 24px;
-      font-size: clamp(2.1rem, 4.4vw, 4.1rem);
+      font-size: clamp(2.1rem, 3.8vw, 3.1rem);
       line-height: 1.22;
       letter-spacing: 0;
       font-weight: 900;
+      text-wrap: balance;
     }
 
     .price-main {
@@ -1109,10 +1112,40 @@
 
     .cta h2 {
       margin: 0 0 16px;
-      font-size: clamp(2.3rem, 5vw, 4.6rem);
+      font-size: clamp(2.25rem, 4.1vw, 3.45rem);
       line-height: 1.22;
       letter-spacing: 0;
       font-weight: 900;
+      text-wrap: balance;
+    }
+
+    .heading-line {
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .heading-line-group {
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .heading-part {
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .hero h1,
+    .section-title h2,
+    .concept-copy h3,
+    .about-copy h3,
+    .feature-card h3,
+    .safety-card h3,
+    .target-card h3,
+    .price-ticket h2,
+    .cta h2 {
+      word-break: auto-phrase;
+      line-break: strict;
+      overflow-wrap: normal;
     }
 
     .cta p {
@@ -1147,6 +1180,38 @@
       color: var(--muted);
       font-size: 0.88rem;
       font-weight: 700;
+    }
+
+    /* デスクトップ微調整: 枠の下端揃え・改行位置 */
+    @media (min-width: 961px) {
+      .lead {
+        font-size: 0.95rem;
+      }
+
+      .about-copy p {
+        font-size: 0.95rem;
+      }
+
+      .concept-copy p,
+      .problem-card p,
+      .safety-card p,
+      .target-card p {
+        text-wrap: pretty;
+      }
+
+      .price-grid > div:last-child {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .price-includes {
+        flex: 1;
+        grid-auto-rows: 1fr;
+      }
+
+      .price-side-note {
+        margin-bottom: 0;
+      }
     }
 
     @media (max-width: 960px) {
@@ -1240,8 +1305,33 @@
         font-size: 1.9rem;
       }
 
+      .heading-line-group {
+        white-space: normal;
+      }
+
+      .cta h2 {
+        font-size: clamp(2rem, 9vw, 2.65rem);
+      }
+
       .lead {
         font-size: 0.98rem;
+      }
+
+      /* スマホ用微調整 */
+      p,
+      li,
+      h3 {
+        text-wrap: pretty;
+      }
+
+      .problem-card,
+      .safety-card {
+        min-height: 0;
+      }
+
+      .price-includes li span {
+        font-size: 0.85rem;
+        text-wrap: pretty;
       }
 
       .hero-actions,
@@ -1809,7 +1899,11 @@
       <div class="container price-grid">
         <div class="price-ticket">
           <span class="price-kicker">BUY OUT</span>
-          <h2>メール見守り隊は、<br>買い切りで導入できます。</h2>
+          <h2>
+            <span class="heading-line">メール見守り隊は、</span><br>
+            <span class="heading-line">買い切りで</span><br>
+            <span class="heading-line">導入できます。</span>
+          </h2>
           <div class="price-main" aria-label="買い切り価格25万円">
             <small>一律導入費</small>
             <div class="price-amount"><strong>25</strong><span>万円</span></div>
@@ -1835,7 +1929,12 @@
     <section class="cta" id="contact">
       <div class="container cta-inner">
         <div>
-          <h2>メール対応を、<br>見守りtAIに任せてみる。</h2>
+          <h2>
+            <span class="heading-line">メール対応を、</span><br>
+            <span class="heading-line-group">
+              <span class="heading-part">見守りtAIに</span><span class="heading-part">任せてみる。</span>
+            </span>
+          </h2>
           <p>
             まずは、今のメール対応でどこを自動化できるかを一緒に整理します。
             返信漏れを減らし、下書き作成の手間を軽くするところから始めましょう。
